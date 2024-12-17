@@ -7,18 +7,38 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
-dist
-dist-ssr
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# Build output
+dist/
+dist-ssr/
 *.local
 
 # Editor directories and files
+.vscode/
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Miscellaneous
+.env              # Environment variables
+*.env.local       # Local environment overrides
+.env.production   # Production-specific env vars
+.env.development  # Development-specific env vars
+coverage/         # Test coverage reports
+*.cache           # Cache files
+tmp/
+temp/
+
+# Lint/format output
+eslint.config.js
