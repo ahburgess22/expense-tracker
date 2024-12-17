@@ -154,13 +154,35 @@ def update_expense(id):
             return jsonify(message = "Invalid input: amount must be a positive number."), 400
 
         db.expenses.update_one(
-            {"_id": ObjectId(id)}, 
-            {"$set": {"amount": new_amount}}
+            { "_id": ObjectId(id) }, 
+            { "$set": {"amount": new_amount} }
         )
         return jsonify(message = "Expense updated!", updated_amount = new_amount), 200
     
     except Exception as e:
         return jsonify(message = f"Error updating expense: {str(e)}"), 500
+    
+# DELETE route to delete a specific expense
+@app.route('/expenses/<id>', methods = ['DELETE'])
+@jwt_required()
+def delete_expenese(id):
+    try:
+        if not ObjectId.is_valid(id):
+            return jsonify(message = "Invalid expense ID"), 400
+        
+        user_id = str(get_jwt_identity())
+        expense = db.expenses.find_one({ "_id": ObjectId(id), "user_id": user_id })
+        if not expense:
+            return jsonify(message = "Access denied or expense not found."), 404
+        
+        result = db.expenses.delete_one({ "_id": ObjectId(id) })
+        if result.deleted_count == 0:
+            return jsonify(message = "Failed to delete expense. Please try again."), 500
+
+        return jsonify(message = "Expense deleted."), 200
+    
+    except Exception as e:
+        return jsonify(message = f"Error deleting expense: {str(e)}"), 500
 
 ##########################################################################################################################################
 
