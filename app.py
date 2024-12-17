@@ -132,6 +132,36 @@ def get_expense(id):
     except Exception as e:
         return jsonify(message - f"Error fetching expense: {str(e)}"), 500
 
+# PUT route to update a specific expense
+@app.route('/expenses/<id>', methods = ['PUT'])
+@jwt_required()
+def update_expense(id):
+    try:
+        if not ObjectId.is_valid(id):
+            return jsonify(message = "Invalid expense ID"), 400
+        
+        user_id = str(get_jwt_identity())
+        expense = db.expenses.find_one({ "_id": ObjectId(id), "user_id": user_id })
+        if not expense:
+            return jsonify(message = "Access denied or expense not found."), 404
+
+        data = request.get_json()
+        if not data:
+            return jsonify(message = "No data provided."), 400
+        
+        new_amount = data.get('amount')
+        if new_amount is None or not isinstance(new_amount, (int, float)) or new_amount <= 0: # Validate amount
+            return jsonify(message = "Invalid input: amount must be a positive number."), 400
+
+        db.expenses.update_one(
+            {"_id": ObjectId(id)}, 
+            {"$set": {"amount": new_amount}}
+        )
+        return jsonify(message = "Expense updated!", updated_amount = new_amount), 200
+    
+    except Exception as e:
+        return jsonify(message = f"Error updating expense: {str(e)}"), 500
+
 ##########################################################################################################################################
 
 @app.route('/') # Testing connection is working
