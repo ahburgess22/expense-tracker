@@ -184,6 +184,58 @@ def delete_expenese(id):
     except Exception as e:
         return jsonify(message = f"Error deleting expense: {str(e)}"), 500
 
+# POST route to create a new budget if DNE and update if DE
+@app.route('/budget', methods = ['POST'])
+@jwt_required()
+def upsert_budget(): # Upsert = Upload or Insert
+    try:
+        user_id = str(get_jwt_identity())
+        data = request.get_json()
+        if not data or "amount" not in data or not isinstance(data['amount'], (int, float)) or data['amount'] <= 0:
+            return jsonify(message = "Invalid input. Budget amount must be a positive number."), 400
+        
+        existing_budget = db.budgets.find_one({ "user_id": user_id }) # Check for an existing budget for this user
+        if existing_budget: # Update the existing budget
+            db.budgets.update_one(
+                { "user_id": user_id },
+                { "$set": {"amount": data['amount'], "updated_at": datetime.utcnow()}}
+            )
+            return jsonify(message = "Budget updated successfully.", amount = data['amount']), 200
+
+        else: # Create a new budget
+            db.budgets.insert_one({
+                "user_id": user_id,
+                "amount": data['amount'],
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow(),
+                "current_spent": 0.0
+            })
+            return jsonify(message = "Budget created successfully.", amount = data['amount']), 201
+    
+    except Exception as e:
+        return jsonify(message = f"Error processing budget: {str(e)}")
+
+# GET route to retrieve the current monthly budget
+@app.route('/budget', methods = ['GET'])
+@jwt_required()
+def get_budget():
+    try:
+        user_id = str(get_jwt_identity())
+        budget = db.budgets.find_one({ "user_id": user_id })
+        if not budget:
+            return jsonify(message = "Budget does not exist for this user."), 404
+        
+        response = {
+            "budget_id": str(budget["_id"]),
+            "amount": budget.get("amount"),
+            "created_at": budget.get("created_at", "N/A"), # N/A fail-safe
+            "updated_at": budget.get("updated_at", "N/A")
+            }
+        return jsonify(response), 200
+    
+    except Exception as e:
+        return jsonify(message = f"Error retrieving budget: {str(e)}")
+
 ##########################################################################################################################################
 
 @app.route('/') # Testing connection is working
