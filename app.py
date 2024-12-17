@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_bcrypt import Bcrypt
+from bson.objectid import ObjectId
 import bcrypt
 
 ###################### CONFIGURATION ######################
@@ -94,7 +95,7 @@ def add_expense():
     except Exception as e:
         return jsonify(message = f"Error adding expense: {str(e)}"), 500
     
-# GET route to fetch user expenses
+# GET route to fetch all expenses for a user
 @app.route('/expenses', methods = ['GET'])
 @jwt_required()
 def get_expenses():
@@ -111,6 +112,25 @@ def get_expenses():
     
     except Exception as e:
         return jsonify(message = f"Error fetching expenses: {str(e)}"), 500
+
+# GET route to fetch a specific user expense
+@app.route('/expenses/<id>', methods = ['GET'])
+@jwt_required()
+def get_expense(id):
+    try:
+        if not ObjectId.is_valid(id): # Verify this id is a valid ObjectId
+            return jsonify(message = "Invalid expense ID"), 400
+        
+        user_id = str(get_jwt_identity())
+        expense = db.expenses.find_one({ "_id": ObjectId(id), "user_id": user_id }) # Query for specific objectId belonging to this user
+        if not expense:
+            return jsonify(message = "Access denied or expense not found."), 404
+        
+        expense['_id'] = str(expense['_id'])
+        return jsonify(expense), 200
+
+    except Exception as e:
+        return jsonify(message - f"Error fetching expense: {str(e)}"), 500
 
 ##########################################################################################################################################
 
