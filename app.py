@@ -187,7 +187,7 @@ def delete_expenese(id):
 # POST route to create a new budget if DNE and update if DE
 @app.route('/budget', methods = ['POST'])
 @jwt_required()
-def upsert_budget(): # Upsert = Upload or Insert
+def upsert_budget(): # Upsert = Update or Insert
     try:
         user_id = str(get_jwt_identity())
         data = request.get_json()
