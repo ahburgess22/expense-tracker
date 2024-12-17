@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { login, fetchExpenses, uploadExpense } from './services/api';
+import { login, fetchExpenses, uploadExpense, updateExpense } from './services/api';
 
 function App() {
+
+  /*  ====================== 
+       State Initialization             
+      ====================== */
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [token, setToken] = useState('');
@@ -12,8 +16,18 @@ function App() {
     category: '',
     description: '',
   });
+  const [editExpenseId, setEditExpenseId] = useState(null); // Track which expense to edit
+  const [editData, setEditData] = useState({
+    amount: '',
+    category: '',
+    description: '',
+  });
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
+  /*  ====================== 
+       Function Definitions             
+      ====================== */
 
   // Handle user login
   const handleLogin = async (e) => {
@@ -62,6 +76,41 @@ function App() {
     }
   }
 
+  // Handle Edit Button Click
+  const handleEditClick = (expense) => {
+    setEditExpenseId(expense._id);
+    setEditData({
+        amount: expense.amount,
+        category: expense.category,
+        description: expense.description,
+    });
+  };
+
+  // Update expense
+  const handleUpdateExpense = async () => {
+    try {
+        const payload = { amount: Number(editData.amount) }
+        console.log("Payload Data:" , payload);
+        await updateExpense(editExpenseId, editData);
+        setExpenses((prev) =>
+            prev.map((expense) =>
+                expense._id === editExpenseId ? { ...expense, ...payload } : expense
+            )
+        );
+        setEditExpenseId(null); // Exit edit mode
+        setError(""); // Clear any previous errors
+    } catch (err) {
+        setError("Error updating expense.");
+        console.error(err);
+    }
+  };
+
+  // Handle Edit Form Input Change
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditData({ ...editData, [name]: value });
+};
+
   return (
     <div style={{ padding: '2rem' }}>
         <h1>Expense Tracker - Login First</h1>
@@ -106,14 +155,48 @@ function App() {
                 <ul>
                     {expenses.map((expense) => (
                         <li key={expense._id}>
-                            <strong>Category:</strong> {expense.category}, 
-                            <strong> Amount:</strong> ${expense.amount}, 
-                            <strong> Description:</strong> {expense.description}
+                            {editExpenseId === expense._id ? (
+                                // Edit Form
+                                <>
+                                    <input
+                                        type="number"
+                                        name="amount"
+                                        value={editData.amount}
+                                        onChange={handleEditChange}
+                                        placeholder="Amount"
+                                    />
+                                    <input
+                                        type="text"
+                                        name="category"
+                                        value={editData.category}
+                                        onChange={handleEditChange}
+                                        placeholder="Category"
+                                    />
+                                    <input
+                                        type="text"
+                                        name="description"
+                                        value={editData.description}
+                                        onChange={handleEditChange}
+                                        placeholder="Description"
+                                    />
+                                    <button onClick={handleUpdateExpense}>Save</button>
+                                    <button onClick={() => setEditExpenseId(null)}>Cancel</button>
+                                </>
+                            ) : (
+                                // Display Expense Details
+                                <>
+                                    <strong>Category:</strong> {expense.category},{" "}
+                                    <strong>Amount:</strong> ${expense.amount},{" "}
+                                    <strong>Description:</strong> {expense.description}{" "}
+                                    <button onClick={() => handleEditClick(expense)}>Edit</button>
+                                </>
+                            )}
                         </li>
                     ))}
                 </ul>
             </div>
-        )}
+          )}
+
 
         {/* Add Expense Form */}
         {token && (

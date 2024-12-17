@@ -10,7 +10,7 @@ import bcrypt
 ###################### CONFIGURATION ######################
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, supports_credentials=True)
 
 # Set up secret key for JWT
 app.config["JWT_SECRET_KEY"] = 'super_secure_and_badass_jwt_secret'
@@ -136,6 +136,10 @@ def get_expense(id):
 @app.route('/expenses/<id>', methods = ['PUT'])
 @jwt_required()
 def update_expense(id):
+    data = request.get_json()
+    if not data or "amount" not in data:
+        return jsonify(message = "Invalid input: 'amount' field is required."), 400
+
     try:
         if not ObjectId.is_valid(id):
             return jsonify(message = "Invalid expense ID"), 400
@@ -149,8 +153,9 @@ def update_expense(id):
         if not data:
             return jsonify(message = "No data provided."), 400
         
-        new_amount = data.get('amount')
-        if new_amount is None or not isinstance(new_amount, (int, float)) or new_amount <= 0: # Validate amount
+        new_amount = float(data["amount"])
+        if new_amount <= 0: # Validate amount
+            print("Invalid input: amount must be a positive number.")
             return jsonify(message = "Invalid input: amount must be a positive number."), 400
 
         db.expenses.update_one(
