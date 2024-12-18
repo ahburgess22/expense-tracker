@@ -230,9 +230,20 @@ def get_budget():
         if not budget:
             return jsonify(message = "Budget does not exist for this user."), 404
         
+        # Aggregate total expenses for the user
+        pipeline = [
+            { "$match": {"user_id": user_id} },
+            { "$group": {"_id": None, "total_spent": {"$sum": {"$toDouble": "$amount"}}} }
+        ]
+        total_expenses = list(db.expenses.aggregate(pipeline))
+        print(total_expenses)
+        current_spent = total_expenses[0]["total_spent"] if total_expenses else 0
+        # print(current_spent)
+        
         response = {
             "budget_id": str(budget["_id"]),
             "amount": budget.get("amount"),
+            "current_spent": current_spent,
             "created_at": budget.get("created_at", "N/A"), # N/A fail-safe
             "updated_at": budget.get("updated_at", "N/A")
             }
