@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { login, fetchExpenses, uploadExpense, updateExpense } from './services/api';
+import { login, fetchExpenses, uploadExpense, updateExpense, deleteExpense, update_or_create_Budget, fetchBudget } from './services/api';
 
 function App() {
 
@@ -22,6 +22,8 @@ function App() {
     category: '',
     description: '',
   });
+  const [budgetAmount, setBudgetAmount] = useState(''); // Input value for budget
+  const [currentBudget, setCurrentBudget] = useState(null); // Budget fetch
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -51,7 +53,7 @@ function App() {
         const response = await fetchExpenses(); // Automatically uses the baseURL
         setExpenses(response.data); // Set the fetched expenses
     } catch (err) {
-        setError('Error fetching expenses. Please check your token.');
+        setError('Add an expense or please check your token.');
         console.error(err);
     }
   };
@@ -109,11 +111,59 @@ function App() {
   const handleEditChange = (e) => {
     const { name, value } = e.target;
     setEditData({ ...editData, [name]: value });
-};
+  };
+
+  // Handle expense deletion
+  const handleDeleteExpense = async (id) => {
+    try {
+      await deleteExpense(id); // Call deleteExpense API
+      setExpenses((prev) => prev.filter((expense) => expense._id !== id)); // Update the state
+      setMessage("Expense deleted successfully!");
+      setError(""); // Clear any errors
+    } catch (err) {
+      console.error(err);
+      setError("Error deleting expense. Please try again.");
+      setMessage("");
+    }
+  };
+
+  // Handle fetching the budget
+  const handleFetchBudget = async () => {
+    try {
+      const response = await fetchBudget();
+      setCurrentBudget(response.data); // Set the fetched budget
+      setMessage("Budget Fetched successfully")
+    } catch (err) {
+      setMessage("Error fetching budget. Budghet might not exist.")
+      console.error(err)
+    }
+  };
+
+  // Handle upserting the budget
+  const handleUpsertBudget = async () => {
+    try {
+      await update_or_create_Budget({ amount: parseFloat(budgetAmount) });
+      setMessage("Budget updated successfully!");
+      setBudgetAmount(""); // Reset the input field
+      handleFetchBudget(); // Refresh the displayed budget
+    } catch (err) {
+      seetMessage("Error updating/creating budget. Please try again.");
+      console.log(err)
+    }
+  };
+
+  // Format date for budget updates
+  const formatDate = (isoDate) => {
+    return new Date(isoDate).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
 
   return (
     <div style={{ padding: '2rem' }}>
-        <h1>Expense Tracker - Login First</h1>
+        <h1>Expense Tracker</h1>
 
         {/* Login Form */}
         {!token ? (
@@ -136,12 +186,60 @@ function App() {
                         required
                     />
                 </div>
-                <button type="submit">Login</button>
+                <button
+                  style={{ backgroundColor: "deepskyblue", color: "black", border: "none", padding: "0.5rem", cursor: "pointer" }}
+                  type="submit"
+                >
+                  Login
+                </button>
             </form>
         ) : (
             <>
                 <h3>Welcome! You are logged in.</h3>
-                <button onClick={handleFetchExpenses}>Fetch Expenses</button>
+                {/* Fetch Budget Section */}
+                <button onClick={handleFetchBudget} style={{ backgroundColor: "limegreen", marginBottom: "1rem" }}>
+                  Fetch Budget
+                </button>
+
+                {/* Display Current Budget */}
+                {currentBudget && (
+                  <div>
+                    <h2>Current Budget:</h2>
+                    <p>
+                      <strong>Amount:</strong> ${currentBudget.amount}
+                    </p>
+                    <p>
+                      <strong>Created At:</strong> {formatDate(currentBudget.created_at)}
+                    </p>
+                    <p>
+                      <strong>Updated At:</strong> {formatDate(currentBudget.updated_at)}
+                    </p>
+                  </div>
+                )}
+
+                {/* Upsert Budget Section */}
+                <h2>Set Your Budget</h2>
+                <div>
+                  <input
+                    type="number"
+                    placeholder="Enter budget amount"
+                    value={budgetAmount}
+                    onChange={(e) => setBudgetAmount(e.target.value)}
+                    style={{ backgroundColor: "lightgreen", marginRight: "1rem" }}
+                  />
+                  <button onClick={handleUpsertBudget} style={{ backgroundColor: "limegreen" }}>
+                    Save Budget
+                  </button>
+                </div>
+
+                {/* Success/Error Message */}
+                {message && <p style={{ color: "green", marginTop: "1rem" }}>{message}</p>}
+                <button
+                  style={{ backgroundColor: "deepskyblue", color: "black", padding: "0.5rem", cursor: "pointer" }}
+                  onClick={handleFetchExpenses}
+                >
+                  Fetch Expenses
+                </button>
             </>
         )}
 
@@ -169,14 +267,14 @@ function App() {
                                         type="text"
                                         name="category"
                                         value={editData.category}
-                                        onChange={handleEditChange}
+                                        disabled
                                         placeholder="Category"
                                     />
                                     <input
                                         type="text"
                                         name="description"
                                         value={editData.description}
-                                        onChange={handleEditChange}
+                                        disabled
                                         placeholder="Description"
                                     />
                                     <button onClick={handleUpdateExpense}>Save</button>
@@ -188,7 +286,19 @@ function App() {
                                     <strong>Category:</strong> {expense.category},{" "}
                                     <strong>Amount:</strong> ${expense.amount},{" "}
                                     <strong>Description:</strong> {expense.description}{" "}
-                                    <button onClick={() => handleEditClick(expense)}>Edit</button>
+                                    <button 
+                                      style={{ backgroundColor: "gainsboro", color: "black", border: "none", padding: "0.5rem", cursor: "pointer", marginLeft: "1rem" }}
+                                      onClick={() => handleEditClick(expense)}
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      style={{ backgroundColor: "red", color: "white", border: "none", padding: "0.5rem", cursor: "pointer", marginLeft: "1rem" }}
+                                      onClick={() => handleDeleteExpense(expense._id)}
+                                    >
+                                      Delete
+                                    </button>
+                                    
                                 </>
                             )}
                         </li>
@@ -209,6 +319,7 @@ function App() {
                         placeholder="Amount"
                         value={newExpense.amount}
                         onChange={handleInputChange}
+                        style={{ backgroundColor: "lightskyblue", marginRight: "0.2rem" }}
                     />
                     <input
                         type="text"
@@ -216,6 +327,7 @@ function App() {
                         placeholder="Category"
                         value={newExpense.category}
                         onChange={handleInputChange}
+                        style={{ backgroundColor: "lightskyblue", marginRight: "0.2rem" }}
                     />
                     <input
                         type="text"
@@ -223,8 +335,14 @@ function App() {
                         placeholder="Description"
                         value={newExpense.description}
                         onChange={handleInputChange}
+                        style={{ backgroundColor: "lightskyblue", marginRight: "1rem" }}
                     />
-                    <button onClick={handleAddExpense}>Add Expense</button>
+                    <button
+                      style={{ backgroundColor: "deepskyblue", color: "black", border: "none", padding: "0.5rem", cursor: "pointer" }}
+                      onClick={handleAddExpense}
+                    >
+                      Add Expense
+                    </button>
                 </div>
                 {message && <p>{message}</p>}
             </div>
