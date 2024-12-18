@@ -41,6 +41,7 @@ function App() {
         setToken(userToken);
         localStorage.setItem('token', userToken); // Save token to localStorage
         alert('Login successful!'); // Confirm login
+        handleFetchExpenses()
     } catch (err) {
         setError('Login failed: Invalid credentials or server error.');
         console.error(err);
@@ -71,6 +72,7 @@ function App() {
       const response = await uploadExpense(newExpense);
       setMessage('Expense added successfully!');
       setNewExpense({ amount: '', category: '', description: ''}); // Reset form
+      handleFetchExpenses()
       console.log(response.data);
     } catch (err) {
       setMessage('Error adding expense.');
@@ -209,6 +211,12 @@ function App() {
                       <strong>Amount:</strong> ${currentBudget.amount}
                     </p>
                     <p>
+                      <strong>Spent:</strong> ${currentBudget.current_spent}
+                    </p>
+                    <p style={{ color: (currentBudget.amount - currentBudget.current_spent) < 0 ? "red" : "white" }}>
+                      <strong>Remaining:</strong> ${(currentBudget.amount - currentBudget.current_spent)}
+                    </p>
+                    <p>
                       <strong>Created At:</strong> {formatDate(currentBudget.created_at)}
                     </p>
                     <p>
@@ -225,7 +233,7 @@ function App() {
                     placeholder="Enter budget amount"
                     value={budgetAmount}
                     onChange={(e) => setBudgetAmount(e.target.value)}
-                    style={{ backgroundColor: "lightgreen", marginRight: "1rem" }}
+                    style={{ backgroundColor: "lightgreen", color: "black", marginRight: "1rem" }}
                   />
                   <button onClick={handleUpsertBudget} style={{ backgroundColor: "limegreen" }}>
                     Save Budget
@@ -234,12 +242,6 @@ function App() {
 
                 {/* Success/Error Message */}
                 {message && <p style={{ color: "green", marginTop: "1rem" }}>{message}</p>}
-                <button
-                  style={{ backgroundColor: "deepskyblue", color: "black", padding: "0.5rem", cursor: "pointer" }}
-                  onClick={handleFetchExpenses}
-                >
-                  Fetch Expenses
-                </button>
             </>
         )}
 
@@ -319,7 +321,7 @@ function App() {
                         placeholder="Amount"
                         value={newExpense.amount}
                         onChange={handleInputChange}
-                        style={{ backgroundColor: "lightskyblue", marginRight: "0.2rem" }}
+                        style={{ backgroundColor: "lightskyblue", color: "black", marginRight: "0.2rem" }}
                     />
                     <input
                         type="text"
@@ -327,7 +329,7 @@ function App() {
                         placeholder="Category"
                         value={newExpense.category}
                         onChange={handleInputChange}
-                        style={{ backgroundColor: "lightskyblue", marginRight: "0.2rem" }}
+                        style={{ backgroundColor: "lightskyblue", color: "black", marginRight: "0.2rem" }}
                     />
                     <input
                         type="text"
@@ -335,7 +337,7 @@ function App() {
                         placeholder="Description"
                         value={newExpense.description}
                         onChange={handleInputChange}
-                        style={{ backgroundColor: "lightskyblue", marginRight: "1rem" }}
+                        style={{ backgroundColor: "lightskyblue", color: "black", marginRight: "1rem" }}
                     />
                     <button
                       style={{ backgroundColor: "deepskyblue", color: "black", border: "none", padding: "0.5rem", cursor: "pointer" }}
