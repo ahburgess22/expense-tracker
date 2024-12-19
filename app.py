@@ -251,6 +251,36 @@ def get_budget():
     
     except Exception as e:
         return jsonify(message = f"Error retrieving budget: {str(e)}")
+    
+# GET route to group expenses by category
+@app.route('/analytics/group-by-category', methods = ['GET'])
+@jwt_required()
+def expenses_by_category():
+    try:
+        user_id = str(get_jwt_identity())
+
+        # Aggregate expenses by category
+        pipeline = [
+            { "$match": {"user_id": user_id} },
+            {
+                "$group": {
+                    "_id": "$category", # Group by category
+                    "total_amount": {"$sum": {"$toDouble": "$amount"}}, # Calculate total amount
+                }
+            },
+            { "$sort": {"total_amount": -1} } # Sort categories by total amount (descending)
+        ]
+        expenses = list(db.expenses.aggregate(pipeline))
+        print(expenses)
+        grouped_expenses = [
+            { "category": expense["_id"], "total_amount": expense["total_amount"] }
+            for expense in expenses
+        ]
+
+        return jsonify({ "data": grouped_expenses} ), 200
+
+    except Exception as e:
+        return jsonify(message = f"Error grouping expenses: {str(e)}"), 500
 
 ##########################################################################################################################################
 

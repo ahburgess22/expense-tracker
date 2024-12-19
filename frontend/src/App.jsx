@@ -213,7 +213,7 @@ function App() {
                     <p>
                       <strong>Spent:</strong> ${currentBudget.current_spent}
                     </p>
-                    <p style={{ color: (currentBudget.amount - currentBudget.current_spent) < 0 ? "red" : "white" }}>
+                    <p style={{ color: (currentBudget.amount - currentBudget.current_spent) < 0 ? "red" : "inherit" }}>
                       <strong>Remaining:</strong> ${(currentBudget.amount - currentBudget.current_spent)}
                     </p>
                     <p>
