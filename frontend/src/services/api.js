@@ -31,3 +31,6 @@ export const deleteExpense = (id) => API.delete(`/expenses/${id}`);
 /* API Endpoints to Handle Budgets */
 export const update_or_create_Budget = (data) => API.post('/budget', data);
 export const fetchBudget = () => API.get('/budget');
+
+/* API Endpoints for Analytics */
+export const fetchCategoryAnalytics = () => API.get('/analytics/group-by-category');

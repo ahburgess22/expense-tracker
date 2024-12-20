@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { login, fetchExpenses, uploadExpense, updateExpense, deleteExpense, update_or_create_Budget, fetchBudget } from './services/api';
+import { login, fetchExpenses, uploadExpense, updateExpense, deleteExpense,
+   update_or_create_Budget, fetchBudget, fetchCategoryAnalytics 
+  } from './services/api';
 
 function App() {
 
@@ -42,6 +44,7 @@ function App() {
         localStorage.setItem('token', userToken); // Save token to localStorage
         alert('Login successful!'); // Confirm login
         handleFetchExpenses()
+        handleFetchBudget()
     } catch (err) {
         setError('Login failed: Invalid credentials or server error.');
         console.error(err);
@@ -73,6 +76,7 @@ function App() {
       setMessage('Expense added successfully!');
       setNewExpense({ amount: '', category: '', description: ''}); // Reset form
       handleFetchExpenses()
+      handleFetchBudget()
       console.log(response.data);
     } catch (err) {
       setMessage('Error adding expense.');
@@ -136,7 +140,7 @@ function App() {
       setCurrentBudget(response.data); // Set the fetched budget
       setMessage("Budget Fetched successfully")
     } catch (err) {
-      setMessage("Error fetching budget. Budghet might not exist.")
+      setMessage("Set a budget.")
       console.error(err)
     }
   };
@@ -164,13 +168,17 @@ function App() {
   };
 
   return (
-    <div style={{ padding: '2rem' }}>
-        <h1>Expense Tracker</h1>
-
+    <>
+      <div className="d-flex flex-column justify-content-center align-items-center" style={{width: "100vw", height: "1vh", paddingTop: "5rem"}}>
+        <h1 className='text-center mb-4'>Expense Tracker</h1>
+      </div>
+      
         {/* Login Form */}
+        <div style={{ padding: "2rem" }}>
+        <div className='container mt-4'>
         {!token ? (
-            <form onSubmit={handleLogin}>
-                <div>
+            <form onSubmit={handleLogin} className='w-50 mx-auto'>
+                <div className='mb-3'>
                     <label>Email:</label>
                     <input
                         type="email"
@@ -179,7 +187,7 @@ function App() {
                         required
                     />
                 </div>
-                <div>
+                <div className='md-3'>
                     <label>Password:</label>
                     <input
                         type="password"
@@ -197,51 +205,79 @@ function App() {
             </form>
         ) : (
             <>
-                <h3>Welcome! You are logged in.</h3>
-                {/* Fetch Budget Section */}
-                <button onClick={handleFetchBudget} style={{ backgroundColor: "limegreen", marginBottom: "1rem" }}>
-                  Fetch Budget
-                </button>
+                <h3 className='text-center'>Welcome! You are logged in.</h3>
+                
 
                 {/* Display Current Budget */}
                 {currentBudget && (
-                  <div>
-                    <h2>Current Budget:</h2>
-                    <p>
-                      <strong>Amount:</strong> ${currentBudget.amount}
-                    </p>
-                    <p>
-                      <strong>Spent:</strong> ${currentBudget.current_spent}
-                    </p>
-                    <p style={{ color: (currentBudget.amount - currentBudget.current_spent) < 0 ? "red" : "inherit" }}>
-                      <strong>Remaining:</strong> ${(currentBudget.amount - currentBudget.current_spent)}
-                    </p>
-                    <p>
-                      <strong>Created At:</strong> {formatDate(currentBudget.created_at)}
-                    </p>
-                    <p>
-                      <strong>Updated At:</strong> {formatDate(currentBudget.updated_at)}
-                    </p>
+                  <div className="container mt-5">
+                    <div className="row">
+                      {/* Current Budget and Update Section */}
+                      <div className="col-md-6 mx-auto">
+                        <div className="card p-4">
+                          <h2 className="text-center">Current Budget</h2>
+                          <p>
+                            <strong>Amount:</strong> ${currentBudget.amount}
+                          </p>
+                          <p>
+                            <strong>Spent:</strong> ${currentBudget.current_spent}
+                          </p>
+                          <p
+                            style={{
+                              color:
+                                currentBudget.amount - currentBudget.current_spent < 0
+                                  ? "red"
+                                  : "inherit",
+                            }}
+                          >
+                            <strong>Remaining:</strong> $
+                            {currentBudget.amount - currentBudget.current_spent}
+                          </p>
+                          <p>
+                            <strong>Created At:</strong>{" "}
+                            {formatDate(currentBudget.created_at)}
+                          </p>
+                          <p>
+                            <strong>Updated At:</strong>{" "}
+                            {formatDate(currentBudget.updated_at)}
+                          </p>
+
+                          {/* Add Budget Upsert Section Below */}
+                          <h2 className="text-center mt-4">Set Your Budget</h2>
+                          <div className="input-group my-3">
+                            <input
+                              type="number"
+                              placeholder="Enter budget amount"
+                              value={budgetAmount}
+                              onChange={(e) => setBudgetAmount(e.target.value)}
+                              className="form-control"
+                            />
+                            <button
+                              onClick={handleUpsertBudget}
+                              className="btn btn-success"
+                            >
+                              Save Budget
+                            </button>
+                          </div>
+                          {message && (
+                            <p className="text-success text-center">{message}</p>
+                          )}
+                          {error && <p className="text-danger text-center">{error}</p>}
+                        </div>
+                      </div>
+
+                      {/* Analytics Placeholder */}
+                      <div className="col-md-6">
+                        <div className="card p-4">
+                          <h2 className="text-center">Analytics</h2>
+                          <div className="chart-placeholder">
+                            <p>Chart will go here</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
-
-                {/* Upsert Budget Section */}
-                <h2>Set Your Budget</h2>
-                <div>
-                  <input
-                    type="number"
-                    placeholder="Enter budget amount"
-                    value={budgetAmount}
-                    onChange={(e) => setBudgetAmount(e.target.value)}
-                    style={{ backgroundColor: "lightgreen", color: "black", marginRight: "1rem" }}
-                  />
-                  <button onClick={handleUpsertBudget} style={{ backgroundColor: "limegreen" }}>
-                    Save Budget
-                  </button>
-                </div>
-
-                {/* Success/Error Message */}
-                {message && <p style={{ color: "green", marginTop: "1rem" }}>{message}</p>}
             </>
         )}
 
@@ -249,6 +285,8 @@ function App() {
         {error && <p style={{ color: 'red' }}>{error}</p>}
 
         {/* Display Expenses */}
+        
+        <div className='container mt-5 text-center'>
         {expenses.length > 0 && (
             <div>
                 <h2>Your Expenses:</h2>
@@ -346,10 +384,12 @@ function App() {
                       Add Expense
                     </button>
                 </div>
-                {message && <p>{message}</p>}
             </div>
         )}
-    </div>
+        </div>
+        </div>
+        </div>
+    </>
   );
 }
 
