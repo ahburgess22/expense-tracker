@@ -29,6 +29,7 @@ function App() {
   const [currentBudget, setCurrentBudget] = useState(null); // Budget fetch
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   /*  ====================== 
        Function Definitions             
@@ -78,6 +79,7 @@ function App() {
       setNewExpense({ amount: '', category: '', description: ''}); // Reset form
       handleFetchExpenses()
       handleFetchBudget()
+      setRefreshTrigger((prev) => prev + 1);
       console.log(response.data);
     } catch (err) {
       setMessage('Error adding expense.');
@@ -215,7 +217,7 @@ function App() {
                     <div className="row">
                       {/* Current Budget and Update Section */}
                       <div className="col-md-6 mx-auto">
-                        <div className="card p-4">
+                        <div className="card p-4" style={{ backgroundColor: "#6bffb5", minHeight: "450px", maxHeight: "450px" }}>
                           <h2 className="text-center">Current Budget</h2>
                           <p>
                             <strong>Amount:</strong> ${currentBudget.amount}
@@ -261,7 +263,9 @@ function App() {
                             </button>
                           </div>
                           {message && (
-                            <p className="text-success text-center">{message}</p>
+                            <p className="text-success text-center" style={{ color: "black" }}>
+                              {message}
+                            </p>
                           )}
                           {error && <p className="text-danger text-center">{error}</p>}
                         </div>
@@ -269,9 +273,9 @@ function App() {
 
                       {/* Analytics */}
                       <div className="col-md-6">
-                        <div className="card p-4">
+                        <div className="card p-4" style={{ backgroundColor: "#fff2e6", minHeight: "450px", maxHeight: "450px" }}>
                           <h2 className="text-center">Categorical Spending</h2>
-                          <Analytics />
+                          <Analytics refreshTrigger={refreshTrigger} />
                         </div>
                       </div>
                     </div>
