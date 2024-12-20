@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { login, fetchExpenses, uploadExpense, updateExpense, deleteExpense,
-   update_or_create_Budget, fetchBudget, fetchCategoryAnalytics 
+   update_or_create_Budget, fetchBudget 
   } from './services/api';
+import Analytics from './analytics';
 
 function App() {
 
@@ -266,13 +267,11 @@ function App() {
                         </div>
                       </div>
 
-                      {/* Analytics Placeholder */}
+                      {/* Analytics */}
                       <div className="col-md-6">
                         <div className="card p-4">
-                          <h2 className="text-center">Analytics</h2>
-                          <div className="chart-placeholder">
-                            <p>Chart will go here</p>
-                          </div>
+                          <h2 className="text-center">Categorical Spending</h2>
+                          <Analytics />
                         </div>
                       </div>
                     </div>
