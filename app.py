@@ -81,6 +81,10 @@ def add_expense():
         if not all(k in data for k in ['amount', 'category', 'description']):
             return jsonify(message = "Missing required fields."), 400
         
+        # Ensure required fields aren't empty
+        if data['amount'] == '' or data['category'] == '' or data['description'] == '':
+            return jsonify(message = "Missing required fields."), 400
+        
         # Add the expense to the database
         expense = {
             "user_id": str(user_id),

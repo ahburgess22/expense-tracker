@@ -1,3 +1,4 @@
+import './App.css'
 import React, { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { login, fetchExpenses, uploadExpense, updateExpense, deleteExpense,
@@ -27,7 +28,10 @@ function App() {
   });
   const [budgetAmount, setBudgetAmount] = useState(''); // Input value for budget
   const [currentBudget, setCurrentBudget] = useState(null); // Budget fetch
-  const [message, setMessage] = useState('');
+  const [budgetMessage, setBudgetMessage] = useState('');
+  const [expenseMessage, setExpenseMessage] = useState('');
+  const [budgetError, setBudgetError] = useState('');
+  const [expenseError, setExpenseError] = useState('');
   const [error, setError] = useState('');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -72,17 +76,17 @@ function App() {
 
   // Submit a new expense
   const handleAddExpense = async () => {
-    setMessage('');
     try {
       const response = await uploadExpense(newExpense);
-      setMessage('Expense added successfully!');
+      setExpenseError('')
+      setExpenseMessage('Expense added successfully!');
       setNewExpense({ amount: '', category: '', description: ''}); // Reset form
       handleFetchExpenses()
       handleFetchBudget()
       setRefreshTrigger((prev) => prev + 1);
       console.log(response.data);
     } catch (err) {
-      setMessage('Error adding expense.');
+      setExpenseError('Error adding expense.');
       console.error(err)
     }
   }
@@ -110,17 +114,11 @@ function App() {
         );
         setEditExpenseId(null); // Exit edit mode
         setRefreshTrigger((prev) => prev + 1);
-        setError(""); // Clear any previous errors
+        setExpenseError(''); // Clear any previous errors
     } catch (err) {
-        setError("Error updating expense.");
+        setExpenseError("Error updating expense.");
         console.error(err);
     }
-  };
-
-  // Handle Edit Form Input Change
-  const handleEditChange = (e) => {
-    const { name, value } = e.target;
-    setEditData({ ...editData, [name]: value });
   };
 
   // Handle expense deletion
@@ -128,13 +126,12 @@ function App() {
     try {
       await deleteExpense(id); // Call deleteExpense API
       setExpenses((prev) => prev.filter((expense) => expense._id !== id)); // Update the state
-      setMessage("Expense deleted successfully!");
-      setError(""); // Clear any errors
+      setExpenseError('')
+      setExpenseMessage("Expense deleted successfully!");
       setRefreshTrigger((prev) => prev + 1);
     } catch (err) {
       console.error(err);
-      setError("Error deleting expense. Please try again.");
-      setMessage("");
+      setExpenseError("Error deleting expense. Please try again.");
     }
   };
 
@@ -143,9 +140,8 @@ function App() {
     try {
       const response = await fetchBudget();
       setCurrentBudget(response.data); // Set the fetched budget
-      setMessage("Budget Fetched successfully")
     } catch (err) {
-      setMessage("Set a budget.")
+      setBudgetError("Set a budget.")
       console.error(err)
     }
   };
@@ -154,11 +150,12 @@ function App() {
   const handleUpsertBudget = async () => {
     try {
       await update_or_create_Budget({ amount: parseFloat(budgetAmount) });
-      setMessage("Budget updated successfully!");
+      setBudgetError("")
+      setBudgetMessage("Budget updated successfully!");
       setBudgetAmount(""); // Reset the input field
       handleFetchBudget(); // Refresh the displayed budget
     } catch (err) {
-      seetMessage("Error updating/creating budget. Please try again.");
+      setBudgetError("Error updating/creating budget. Please try again.");
       console.log(err)
     }
   };
@@ -264,12 +261,12 @@ function App() {
                               Save Budget
                             </button>
                           </div>
-                          {message && (
+                          {budgetMessage && (
                             <p className="text-success text-center" style={{ color: "black" }}>
-                              {message}
+                              {budgetMessage}
                             </p>
                           )}
-                          {error && <p className="text-danger text-center">{error}</p>}
+                          {budgetError && <p className="text-danger text-center">{budgetError}</p>}
                         </div>
                       </div>
 
@@ -293,64 +290,43 @@ function App() {
         
         <div className='container mt-5 text-center'>
         {expenses.length > 0 && (
-            <div>
-                <h2>Your Expenses:</h2>
-                <ul>
-                    {expenses.map((expense) => (
-                        <li key={expense._id}>
-                            {editExpenseId === expense._id ? (
-                                // Edit Form
-                                <>
-                                    <input
-                                        type="number"
-                                        name="amount"
-                                        value={editData.amount}
-                                        onChange={handleEditChange}
-                                        placeholder="Amount"
-                                    />
-                                    <input
-                                        type="text"
-                                        name="category"
-                                        value={editData.category}
-                                        disabled
-                                        placeholder="Category"
-                                    />
-                                    <input
-                                        type="text"
-                                        name="description"
-                                        value={editData.description}
-                                        disabled
-                                        placeholder="Description"
-                                    />
-                                    <button onClick={handleUpdateExpense}>Save</button>
-                                    <button onClick={() => setEditExpenseId(null)}>Cancel</button>
-                                </>
-                            ) : (
-                                // Display Expense Details
-                                <>
-                                    <strong>Category:</strong> {expense.category},{" "}
-                                    <strong>Amount:</strong> ${expense.amount},{" "}
-                                    <strong>Description:</strong> {expense.description}{" "}
-                                    <button 
-                                      style={{ backgroundColor: "gainsboro", color: "black", border: "none", padding: "0.5rem", cursor: "pointer", marginLeft: "1rem" }}
-                                      onClick={() => handleEditClick(expense)}
-                                    >
-                                      Edit
-                                    </button>
-                                    <button
-                                      style={{ backgroundColor: "red", color: "white", border: "none", padding: "0.5rem", cursor: "pointer", marginLeft: "1rem" }}
-                                      onClick={() => handleDeleteExpense(expense._id)}
-                                    >
-                                      Delete
-                                    </button>
-                                    
-                                </>
-                            )}
-                        </li>
-                    ))}
-                </ul>
-            </div>
-          )}
+          <div className="card">
+            <h2 className="text-center">Your Expenses:</h2>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th>Amount</th>
+                  <th>Description</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {expenses.map((expense) => (
+                  <tr key={expense._id}>
+                    <td>{expense.category}</td>
+                    <td>${expense.amount}</td>
+                    <td>{expense.description}</td>
+                    <td>
+                      <button
+                        className="btn btn-edit"
+                        onClick={() => handleEditClick(expense)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="btn btn-delete"
+                        onClick={() => handleDeleteExpense(expense._id)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
 
         {/* Add Expense Form */}
@@ -389,6 +365,12 @@ function App() {
                       Add Expense
                     </button>
                 </div>
+                {expenseMessage && (
+                  <p className="text-success text-center" style={{ color: "black" }}>
+                    {expenseMessage}
+                  </p>
+                )}
+                {expenseError && <p className="text-danger text-center">{expenseError}</p>}
             </div>
         )}
         </div>
