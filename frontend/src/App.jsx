@@ -109,6 +109,7 @@ function App() {
             )
         );
         setEditExpenseId(null); // Exit edit mode
+        setRefreshTrigger((prev) => prev + 1);
         setError(""); // Clear any previous errors
     } catch (err) {
         setError("Error updating expense.");
@@ -129,6 +130,7 @@ function App() {
       setExpenses((prev) => prev.filter((expense) => expense._id !== id)); // Update the state
       setMessage("Expense deleted successfully!");
       setError(""); // Clear any errors
+      setRefreshTrigger((prev) => prev + 1);
     } catch (err) {
       console.error(err);
       setError("Error deleting expense. Please try again.");

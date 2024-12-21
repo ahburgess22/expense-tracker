@@ -10,7 +10,7 @@ import bcrypt
 ###################### CONFIGURATION ######################
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True)
+CORS(app, origins=["http://localhost:5173"])
 
 # Set up secret key for JWT
 app.config["JWT_SECRET_KEY"] = 'super_secure_and_badass_jwt_secret'
