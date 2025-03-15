@@ -3,12 +3,28 @@ import sys
 import os
 from pathlib import Path
 
-# Import app module from parent directory
+# Import mocking helpers first to patch any problematic imports
+from unittest.mock import patch, MagicMock
+
+# Create mock for ObjectId
+class MockObjectId:
+    def __init__(self, id_str=None):
+        self.id_str = id_str
+    
+    @staticmethod
+    def is_valid(id_str):
+        return isinstance(id_str, str) and len(id_str) == 24
+    
+    def __str__(self):
+        return self.id_str if self.id_str else "mock_object_id"
+
+# Apply the mock before importing app
+patch('bson.objectid.ObjectId', MockObjectId).start()
+
+# Now import app
 import app
 from app import app as flask_app
 import json
-from unittest.mock import patch, MagicMock
-from bson.objectid import ObjectId
 
 @pytest.fixture
 def client():
