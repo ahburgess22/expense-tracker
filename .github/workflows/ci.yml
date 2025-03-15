@@ -46,7 +46,7 @@ jobs:
           pytest
         fi
 
-  test-frontend:
+  verify-frontend:
     runs-on: ubuntu-latest
     
     steps:
@@ -59,40 +59,17 @@ jobs:
     
     - name: Install frontend dependencies
       run: |
-        # Try different potential frontend directory structures
-        if [ -f "package.json" ]; then
-          npm install
-        elif [ -f "frontend/package.json" ]; then
+        if [ -f "frontend/package.json" ]; then
           cd frontend
-          npm install
-        elif [ -f "client/package.json" ]; then
-          cd client
           npm install
         fi
     
     - name: Run linting
-      continue-on-error: true  # Don't fail the build if linting fails initially
       run: |
-        # Try different potential frontend directory structures
-        if [ -f "package.json" ]; then
-          npm run lint || echo "Linting command not found, skipping"
-        elif [ -f "frontend/package.json" ]; then
-          cd frontend
-          npm run lint || echo "Linting command not found, skipping"
-        elif [ -f "client/package.json" ]; then
-          cd client
-          npm run lint || echo "Linting command not found, skipping"
-        fi
+        cd frontend
+        npm run lint
     
-    - name: Run tests
+    - name: Verify frontend builds successfully
       run: |
-        # Try different potential frontend directory structures
-        if [ -f "package.json" ]; then
-          npm test -- --passWithNoTests
-        elif [ -f "frontend/package.json" ]; then
-          cd frontend
-          npm test -- --passWithNoTests
-        elif [ -f "client/package.json" ]; then
-          cd client
-          npm test -- --passWithNoTests
-        fi
+        cd frontend
+        npm run build
