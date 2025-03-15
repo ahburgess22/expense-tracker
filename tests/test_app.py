@@ -1,5 +1,11 @@
 import pytest
-from app import app
+import sys
+import os
+from pathlib import Path
+
+# Import app module from parent directory
+import app
+from app import app as flask_app
 import json
 from unittest.mock import patch, MagicMock
 from bson.objectid import ObjectId
@@ -7,8 +13,8 @@ from bson.objectid import ObjectId
 @pytest.fixture
 def client():
     """Create a test client for the app."""
-    app.config['TESTING'] = True
-    with app.test_client() as client:
+    flask_app.config['TESTING'] = True
+    with flask_app.test_client() as client:
         yield client
 
 def test_home_route(client):

@@ -46,8 +46,8 @@ jobs:
     
     - name: Test with pytest
       run: |
-        # Run the tests
-        pytest tests/
+        # Run the tests from project root to ensure imports work correctly
+        python -m pytest tests/
 
   verify-frontend:
     runs-on: ubuntu-latest
