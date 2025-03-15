@@ -134,7 +134,7 @@ def get_expense(id):
         return jsonify(expense), 200
 
     except Exception as e:
-        return jsonify(message - f"Error fetching expense: {str(e)}"), 500
+        return jsonify(message = f"Error fetching expense: {str(e)}"), 500
 
 # PUT route to update a specific expense
 @app.route('/expenses/<id>', methods = ['PUT'])
